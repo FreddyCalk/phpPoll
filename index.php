@@ -10,23 +10,45 @@
 	// Once they click on the vote button,
 	// 
 
-	$query = "SELECT * FROM cbb";
-	$result = mysql_query($query);
 
-	while($row = mysql_fetch_assoc($result)){
-		$team1[$row['mid']] = $row['team1'];
-		$team2[$row['mid']] = $row['team2'];
-		$team1_image[$row['mid']] = $row['image1'];
-		$team2_image[$row['mid']] = $row['image2'];
-	}
+	$result = DB::query("SELECT * FROM cbb");
 
-	$matchup = rand(1,10);
+		print_r($_SESSION);
+		// exit;
+
+	// do{
+		$matchup = rand(1,sizeof($result));
+
+	// }while($_SESSION[$matchup]);
+
+		
+	$result = DB::query("SELECT * FROM cbb WHERE mid ='". $matchup . "'");
+	// }
 	
-	// print '<pre>';
-	// print_r($team1[1]);
-	// print ' ';
-	// print_r($team2[1]);
-	// exit;
+
+
+
+	// for($x = 0; $x < sizeof($result);$x++){
+
+		$team1 = $result[0]['team1'];
+		$team2 = $result[0]['team2'];
+		$team1_image = $result[0]['image1'];
+		$team2_image = $result[0]['image2'];
+
+
+		
+	// $rand = rand ( 0, count($rows)-1 );
+	// $rand2 = $rand;
+	
+	// while($rand == $rand2){
+	// 	$rand2 = rand ( 0, count($rows)-1 );
+	// }
+	
+	// $_SESSION[$matchup] = true;
+
+
+	
+
 
 ?>
 	
@@ -53,33 +75,67 @@
 			<h1 class="col-xs-6 col-xs-offset-3" style="text-align:center">College Basketball Poll</h1>
 			<h3 class="col-xs-6 col-xs-offset-3" style="text-align:center">Who do you think will win?</h1>
 		</div>
+		<div class="row" style="text-align:center">
+			<h4 class="col-xs-5 col-xs-offset-1">Away Team</h4>
+			<h4 class="col-xs-5">Home Team</h4>
+		</div>
 		<div class="row">
-			<img class="col-xs-5 team_image" style="" src="<?php print $team1_image[$matchup] ?>">
-			<img class="col-xs-5 col-xs-offset-2 team_image" style="" src="<?php print $team2_image[$matchup] ?>">
+			<img class="col-xs-5 col-xs-offset-1 team_image" style="vertical-position:center" src=<?php print $team1_image ?>>
+			<img class="col-xs-5 team_image" style="vertical-position:center" src=<?php print $team2_image ?>>
 		</div>
 		<div class="row" style="text-align:center">
-			<button class="btn btn-success col-xs-3 col-xs-offset-1 vote-button" vote="<?php print $team1[$matchup]; ?>" opp="<?php print $team2[$matchup]; ?>" style="text-align:center"><?php print $team1[$matchup]; ?></button>
-			<button class="btn btn-success col-xs-3 col-xs-offset-4 vote-button" vote="<?php print $team2[$matchup]; ?>" opp="<?php print $team1[$matchup]; ?>"><?php print $team2[$matchup]; ?></button>
+			<div class="col-xs-3 col-xs-offset-2" id="away-wrapper">
+				<button class="col-xs-12 btn btn-success vote-button" team="<?php print $team1; ?>" opp="<?php print $team2 ?>" matchup="<?php print $matchup; ?>" style="text-align:center"><?php print $team1; ?></button>
+			</div>
+			<div class="col-xs-2" style="padding:6px 12px;">OR</div>
+			<div class="col-xs-3" id="home-wrapper">
+				<button class="btn btn-success col-xs-12 vote-button" team="<?php print $team2; ?>" opp="<?php print $team1 ?>" matchup="<?php print $matchup; ?>"><?php print $team2; ?></button>
+			</div>
 		</div>
-		<div class="row">
-			<button class="btn btn-warning col-xs-2 col-xs-offset-5 next">Next Matchup</button>
+		<div class="row matchup">
+			
 		</div>
 	</div>
 
 	<script>
 
 	$('.vote-button').click(function(){
-		var vote = $(this).attr('vote');
+		var vote = $(this).attr('team');
+		var matchup = $(this).attr('matchup');
 		var opp = $(this).attr('opp');
+		$.ajax({
+			url: 'process_vote.php',
+			type: 'post',
+			data: {
+				team: vote,
+				opp: opp,
+				mid: matchup
+			},
+			success: function(result){
+				console.log(result);
+				var newVote = vote;
+				var matchup = Number(result.mid);
+				// obj = JSON.parse(result);
+				document.write(result);
 
-		console.log(vote,opp)
+				// JavaScript to allow the user to see the results, as well as go on to the next matchup.
+				if(result){
+					$('#away-wrapper').text('Winner is '+vote);
+					$('#home-wrapper').text('Loser is '+opp);
+					var html = "<button class='btn btn-warning col-xs-4 col-xs-offset-4 next'>Next Matchup</button>";
+					$('.matchup').append(html);
+					$('.next').click(function(){
+						location.reload();
+					})
+				}
+			}
+		})
+
 	})
+	
 
 
-
-	$('.next').click(function(){
-		location.reload();
-	})
+	
 
 	</script>
 </body>
